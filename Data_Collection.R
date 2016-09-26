@@ -15,39 +15,38 @@
 # Objective: To extract the script informaiton associated with the document.
 
 # check the loaded packages
-(.packages())
+# (.packages())
 
 # Required packages for scraping data
-x <- c("XML", "RCurl", "stringr")
+# x <- c("XML", "RCurl", "stringr")
 
 # Install above packages
-install.packages(x)
+# install.packages(x)
 
 # Load packages
-lapply(x, require, character.only = TRUE)
+# lapply(x, require, character.only = TRUE)
 
 
 route_url <- "http://bcferries.applocation.net/routemaps/route4.html"
 
 # From XML package
-route_page_source <- readLines(route_url, encoding = "UTF-8")
+# route_page_source <- readLines(route_url, encoding = "UTF-8")
 
 # Parsed Page
-route_parsed <- htmlParse(route_page_source, encoding = "UTF-8")
+# route_parsed <- htmlParse(route_page_source, encoding = "UTF-8")
 
 # Script node which contains information about the location of the marker on the map in reference with pixel grid.
-script_node <- route_parsed ["//script"][[1]]
+# script_node <- route_parsed ["//script"][[1]]
 
 # Image of the route for each grab. For comparing the data with the data from marine traffic data.
-image_node <- route_parsed ["//img"][[1]]
+# image_node <- route_parsed ["//img"][[1]]
 
 
-links <- getHTMLLinks(route_url)
+# links <- getHTMLLinks(route_url)
 
 
 route_image_url <- gsub("html", "jpg", route_url)
 
-
-download.file(route_image_url, 'test.jpg')
-
+# Download to images folder with EDT Time stamp as the title.
+download.file(route_image_url, destfile = paste("images/", Sys.time(), ".jpg"))
 
