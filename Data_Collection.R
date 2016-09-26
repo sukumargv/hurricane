@@ -26,6 +26,7 @@
 # Load packages
 # lapply(x, require, character.only = TRUE)
 
+setwd("/Users/sukumargv/dropbox/Academia/3rd Semester/Koop/hurricane/hurricane")
 
 route_url <- "http://bcferries.applocation.net/routemaps/route4.html"
 
@@ -44,9 +45,20 @@ route_url <- "http://bcferries.applocation.net/routemaps/route4.html"
 
 # links <- getHTMLLinks(route_url)
 
+# making the image name universal platform compatible
+
+
+image_download_time <- as.POSIXct(Sys.time(), format = "%m-%d-%Y %H:%M:%S")
+print("System Time: ")
+image_download_time
+
+attr(image_download_time, "tzone") <- "UTC"
+print("Converted time in UTC: ")
+image_download_time
+
+image_download_time <-  gsub(":", "-", image_download_time)
 
 route_image_url <- gsub("html", "jpg", route_url)
 
 # Download to images folder with EDT Time stamp as the title.
-download.file(route_image_url, destfile = paste("images/", Sys.time(), ".jpg"))
-
+download.file(route_image_url, destfile = paste("images/",image_download_time, ".jpg", sep = ""))
