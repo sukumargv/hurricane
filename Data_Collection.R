@@ -6,7 +6,7 @@
 # Start Time: 2:27 PM
 # Location: New Bedford, MA
 
-# Source URL: http://bcferries.applocation.net/routemaps/route0.html
+# Source URL: http://bcferries.applocation.net/routemaps/route4.html
 # Defualt observations:
 # 1. The page on the website automatically refreshers for every 30 seconds.
 # 2. The size of route0 map is 500px x 500px
@@ -27,7 +27,7 @@ install.packages(x)
 lapply(x, require, character.only = TRUE)
 
 
-route_url <- "http://bcferries.applocation.net/routemaps/route0.html"
+route_url <- "http://bcferries.applocation.net/routemaps/route4.html"
 
 # From XML package
 route_page_source <- readLines(route_url, encoding = "UTF-8")
