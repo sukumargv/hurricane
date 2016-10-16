@@ -1,4 +1,4 @@
-# hurricane
+# Hurricane
 Academic Project
 
 ## Background:
