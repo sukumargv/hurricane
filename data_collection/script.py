@@ -64,7 +64,6 @@ def html_json(url,fname):
 
         # operating on the string obtained via regular expression to format the data into dictionary
         for x in pixel_boundary_string:
-            local = []
             dict_local = {}
             split_text = x.split()
             dict_local['x1'] = int(split_text[3])
