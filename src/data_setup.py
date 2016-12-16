@@ -46,6 +46,22 @@ mt_data['timestamp'] = mt_data['timestamp'].dt.tz_localize(tz_est).dt.tz_convert
 
 bc_data = pd.read_pickle('bc_data.pkl')
 
+#lon lat to cord
+def proj_transform(df):
+    bng = pyproj.Proj(init="epsg:4326")
+    wgs84 = pyproj.Proj(init="epsg:3857")
+    cart_x = pd.Series()
+    cart_y = pd.Series()
+    for idx, val in enumerate(df['lon']):
+        lon, lat = pyproj.transform(bng,wgs84,df['lon'][idx], df['lat'][idx])
+        cart_x.set_value(idx, lat)
+        cart_y.set_value(idx, lon)
+    df['cart_x'] = cart_y
+    df['cart_y'] = cart_x
+    return df
+mt_data = proj_transform(mt_data)
+
+
 # pixels to coordinates conversion funciton can only be applied upon 
 
 def pixels_to_coordinates(bc_row,route_tif,index):
