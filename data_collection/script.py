@@ -36,7 +36,7 @@ def pixels_to_coordinates(route_no, center_x, center_y):
 '''
 
 
-def html_json(url,fname):
+def html_json(url, fname, rid):
     soup = BeautifulSoup(urllib2.urlopen(url).read(),
                          'html.parser')
     local_format = "%Y-%m-%d %H:%M:%S"
@@ -64,6 +64,7 @@ def html_json(url,fname):
 
         # operating on the string obtained via regular expression to format the data into dictionary
         for x in pixel_boundary_string:
+            local = []
             dict_local = {}
             split_text = x.split()
             dict_local['x1'] = int(split_text[3])
@@ -145,7 +146,7 @@ def html_json(url,fname):
                 dict_local['Speed'] = final_js_fragment[len(page_data)][2]['Speed']
             dict_local['Time'] = timestamp
             dict_local['Timezone'] = "Canada/Pacific"
-            dict_local['Route'] = fname
+            dict_local['Route'] = rid
 
             # cx, cy = final_boundaries_fragment[len(page_data)]['cx'], final_boundaries_fragment[len(page_data)]['cx']
             # function call to convert center pixel to geographic lon and lat
@@ -167,8 +168,9 @@ def get_all():
 
     for route in routes:
         url = base_url.format(route)
+        rid = "r{:02d}".format(route)
         fname = BASEPATH + "r{:02d}".format(route)
-        thread = threading.Thread(target=html_json(url,fname))
+        thread = threading.Thread(target=html_json(url, fname, rid))
         thread.start()
         # get_page(url, fname)
 
