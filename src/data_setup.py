@@ -114,9 +114,11 @@ bc_route_data['dup_key'] = bc_route_data['cx'] + bc_route_data['cy']
 # data without duplicates
 no_dups_bc_route_data = bc_route_data.drop_duplicates('dup_key')
 
+print mt_data.dtypes
+print bc_route_data.dtypes
 
 # Plot of all the route data from mt_data and bc_data sets
-plt.plot(mt_data['lon'], mt_data['lat'],'-',linewidth=0.5, color = 'blue')
-plt.plot(bc_route_data['lat'], bc_route_data['lon'],'-',linewidth=0.5, color ='green')
-plt.show()
+# plt.plot(mt_data['lon'], mt_data['lat'],'-',linewidth=0.5, color = 'blue')
+# plt.plot(bc_route_data['lat'], bc_route_data['lon'],'-',linewidth=0.5, color ='green')
+# plt.show()
 
