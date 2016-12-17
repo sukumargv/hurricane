@@ -33,7 +33,7 @@ np.array(data)
 mt_data = np.array([tuple(x) for x in data], dtype = [('lon', 'f8'), ('lat', 'f8'), ('speed', 'i4'), ('course', 'i4'), ('heading', 'i4'), ('timestamp', 'M8[s]'), ('ut', 'i8'), ('station', 'i8'), ('gap','i4')])
 
 mt_data = pd.DataFrame(mt_data)
-mt_data.sort_values(by='timestamp')
+mt_data = mt_data.sort_values(by='timestamp')
 
 
 tz_est = pytz.timezone('UTC')
@@ -61,33 +61,43 @@ def proj_transform(df):
     return df
 mt_data = proj_transform(mt_data)
 
+mt_data['cart_x'] = mt_data['cart_x'].astype(float)
+mt_data['cart_y'] = mt_data['cart_y'].astype(float)
 
 # pixels to coordinates conversion funciton can only be applied upon 
 
-def pixels_to_coordinates(bc_row,route_tif,index):
-    # load in the route image
-    ds = gdal.Open(route_tif)
+def pixels_to_coordinates(bc_row,route_tif,index, **kwargs):
+    if ('affine' in kwargs):
+        pass
+    else:
+        # load in the route image
+        ds = gdal.Open(route_tif)
 
-    # unravel GDAL affine transform parameters
-    c, a, b, f, d, e = ds.GetGeoTransform()
-    def pixel2coord(col, row):
-        # Returns global coordinates to pixel center using base-0 raster index
-        xp = a * col + b * row + a * 0.5 + b * 0.5 + c
-        yp = d * col + e * row + d * 0.5 + e * 0.5 + f
-        return xp, yp
+        # unravel GDAL affine transform parameters
+        c, a, b, f, d, e = ds.GetGeoTransform()
+        def pixel2coord(col, row):
+            # Returns global coordinates to pixel center using base-0 raster index
+            xp = a * col + b * row + a * (-5.5) + b * (-5.5) + c
+            yp = d * col + e * row + d * (-5.5) + e * (-5.5) + f
+            return xp, yp
 
-    cart_cord = pixel2coord(bc_row['cx'],bc_row['cy'])
+        cart_cord = pixel2coord(bc_row['cx'],bc_row['cy'])
 
-    # Converting coordinates from EPSG 3857 to 4326
-    inProj = pyproj.Proj(init='epsg:3857')
-    outProj = pyproj.Proj(init='epsg:4326')
+        # Converting coordinates from EPSG 3857 to 4326
+        inProj = pyproj.Proj(init='epsg:3857')
+        outProj = pyproj.Proj(init='epsg:4326')
 
-    coordinates = pyproj.transform(inProj, outProj, cart_cord[0], cart_cord[1])
-    local_dict = {'lat': coordinates[1], 'lon': coordinates[0], 'cart_cord_x': cart_cord[0], 'cart_cord_y': cart_cord[1] }
-    if index==0:
-        return local_dict['lat']
-    if index==1:
-        return local_dict['lon']
+        coordinates = pyproj.transform(inProj, outProj, cart_cord[0], cart_cord[1])
+        local_dict = {'lat': coordinates[1], 'lon': coordinates[0], 'cart_cord_x': cart_cord[0], 'cart_cord_y': cart_cord[1] }
+        if index==0:
+            return local_dict['lat']
+        if index==1:
+            return local_dict['lon']
+        if index==2:
+            return local_dict['cart_cord_x']
+        if index==3:
+            return local_dict['cart_cord_y']
+
 
 # Route file location
 route_file = "../qgis_approach/route2.tif"
@@ -96,29 +106,47 @@ route_file = "../qgis_approach/route2.tif"
 mt_data_min_time = mt_data['timestamp'].min()
 mt_data_max_time = mt_data['timestamp'].max()
 
+# Localize time_Zone of Bc_Data to Pacific time.
+
+bc_data['Time'] = bc_data['Time'].dt.tz_localize(tz_pst)
+
 # Need to modify it so that can be supplied from input
 vessel_name = 'Queen of Nanaimo'
-
-# filtered data with in the time which is available from mt_data frame
 bc_route_data = bc_data[(bc_data['Time'] >= mt_data_min_time) & (bc_data['Time'] <= mt_data_max_time) & (bc_data['Vessel'] == vessel_name)]
 
-# appending computed lon, lat to the data frame
 bc_route_data['lon'] = bc_route_data.apply(lambda x: pixels_to_coordinates(x,route_file,0), axis = 1)
 bc_route_data['lat'] = bc_route_data.apply(lambda x: pixels_to_coordinates(x,route_file,1), axis = 1)
 bc_route_data['cart_x'] = bc_route_data.apply(lambda x: pixels_to_coordinates(x,route_file,2), axis = 1)
 bc_route_data['cart_y'] = bc_route_data.apply(lambda x: pixels_to_coordinates(x,route_file,3), axis = 1)
 
-# key to identify duplicates
 bc_route_data['dup_key'] = bc_route_data['cx'] + bc_route_data['cy']
-
-# data without duplicates
 no_dups_bc_route_data = bc_route_data.drop_duplicates('dup_key')
 
-print mt_data.dtypes
-print bc_route_data.dtypes
 
-# Plot of all the route data from mt_data and bc_data sets
+# Plot of all the route data
 # plt.plot(mt_data['lon'], mt_data['lat'],'-',linewidth=0.5, color = 'blue')
 # plt.plot(bc_route_data['lat'], bc_route_data['lon'],'-',linewidth=0.5, color ='green')
-# plt.show()
 
+#plt.plot(mt_data['cart_x'][:100], mt_data['cart_y'][:100],'-',linewidth=0.5, color = 'red')
+#plt.plot(bc_route_data['cart_x'][:200], bc_route_data['cart_y'][:200],'-',linewidth=0.5, color ='black')
+#plt.show()
+
+'''
+# determining control points
+filter_1 = mt_data[['cart_x', 'cart_y','timestamp','speed']][(mt_data['speed']==0)]
+filter_1_ = bc_route_data[['cart_x', 'cart_y','Time', 'Status']][(bc_route_data['Status'] == 'In Port')]
+plt.scatter(filter_1['cart_x'], filter_1['cart_y'], color ='blue')
+plt.scatter(filter_1_['cart_x'],filter_1_['cart_y'], color = 'green')
+
+plt.show()
+'''
+
+'''
+Algorithm to solve for affine parameters
+
+def solve_affine(s1,s2,s3,t1,t2,t3):
+	Source_S = np.array([[Xs1, Ys1, 1, 0, 0, 0], [Xs2, Ys2, 1, 0, 0, 0], [Xs3, Ys3, 1, 0, 0, 0], [0, 0, 0, Xs1, Ys1, 1], [0, 0, 0, Xs2, Ys2, 1], [0, 0, 0, Xs3, Ys3, 1]])
+	Target_T = np.array([Xt1, Xt2, Xt2, Yt1, Yt2, Yt3])
+	affine = np.linalg.solve(Source_S,Target_T)
+	return affine
+'''
